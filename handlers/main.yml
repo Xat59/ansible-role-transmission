@@ -1,0 +1,5 @@
+---
+- name: restarting transmission container
+  docker_container:
+    name: transmission
+    restart: yes

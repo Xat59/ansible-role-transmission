@@ -1,0 +1,47 @@
+---
+- name: installing epel package
+  yum:
+    name: epel-release
+    state: installed
+    update_cache: yes
+  tags:
+    - prerequisite
+
+- name: installing prerequisite packages
+  yum:
+    name: python2-pip
+    state: installed
+    update_cache: yes
+  tags:
+    - prerequisite
+
+- name: installing docker-py pip module
+  pip:
+    name: docker-py
+  tags:
+    - prerequisite
+
+- name: launch transmission container
+  docker_container:
+    name: transmission
+    pull: yes
+    detach: yes
+    image: linuxserver/transmission
+    volumes:
+      - "{{ transmission_dockerhost_volume_config }}:/config"
+      - "{{ transmission_dockerhost_volume_download }}:/downloads"
+    published_ports:
+      - "{{ transmission_dockerhost_published_rpc_port }}:9091"
+    env:
+        TZ: "{{ transmission_dockerhost_env_timezone }}"
+  tags:
+    - transmission
+
+- name: configuring transmission daemon
+  template:
+    src: transmission_settings.json.j2
+    dest: "{{ transmission_dockerhost_volume_config }}/settings.json"
+  notify: 
+    - restarting transmission container
+  tags:
+    - transmission
